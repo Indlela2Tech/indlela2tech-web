@@ -10,6 +10,7 @@ import AdminDashboard from './components/AdminDashboard';
 import InstitutionsPage from './components/InstitutionsPage';
 import InstitutionDetail from './components/InstitutionDetail';
 import ComparePage from './components/ComparePage';
+import FindMyFit from './components/FindMyFit';
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
           <Route path="/institutions" element={<InstitutionsPage />} />
           <Route path="/institutions/:id" element={<InstitutionDetail />} />
           <Route path="/compare/:idA/:idB" element={<ComparePage />} />
+          <Route path="/find-my-fit" element={<FindMyFit />} />
           <Route path="/shortlist" element={<ShortlistPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/admin/login" element={<AdminLogin />} />

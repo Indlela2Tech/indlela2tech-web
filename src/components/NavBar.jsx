@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { MenuIcon, CloseIcon } from './icons'
-import { Home, Search, Building2, Bookmark, Info } from 'lucide-react'
+import { Home, Search, Building2, Bookmark, Info, Compass } from 'lucide-react'
 
 export default function NavBar() {
   const [open, setOpen] = useState(false)
@@ -9,6 +9,7 @@ export default function NavBar() {
 
   const links = [
     { to: '/', label: 'Home', icon: Home },
+    { to: '/find-my-fit', label: 'Find My Fit', icon: Compass },
     { to: '/browse', label: 'Browse Courses', icon: Search },
     { to: '/institutions', label: 'Institutions', icon: Building2 },
     { to: '/shortlist', label: 'Shortlist', icon: Bookmark },
