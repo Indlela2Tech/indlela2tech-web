@@ -1,0 +1,98 @@
+/*
+  print.css
+  Import this once globally (e.g. in main.jsx: import './print.css') so it
+  applies site-wide. All the rules below only take effect when the page is
+  actually printed or previewed for printing - they have zero effect on the
+  normal on-screen view.
+*/
+
+@media print {
+  /* Hide anything explicitly marked as screen-only chrome */
+  .no-print,
+  nav,
+  header.site-nav,
+  footer.site-footer {
+    display: none !important;
+  }
+
+  /* Reset backgrounds and shadows - printers waste ink on these and they
+     rarely render well anyway */
+  * {
+    box-shadow: none !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Course detail specific formatting */
+  .course-detail {
+    max-width: 100%;
+    padding: 0;
+  }
+
+  .course-detail-header h1 {
+    font-size: 22px;
+    margin-bottom: 4px;
+  }
+
+  .course-meta {
+    font-size: 13px;
+    color: #333333 !important;
+  }
+
+  .course-section {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    margin-bottom: 14px;
+    border-bottom: 1px solid #dddddd;
+    padding-bottom: 10px;
+  }
+
+  .course-section h2 {
+    font-size: 15px;
+    margin-bottom: 4px;
+  }
+
+  .req-badge,
+  .fee-badge {
+    border: 1px solid #999999;
+    padding: 2px 8px;
+    border-radius: 4px;
+    display: inline-block;
+  }
+
+  .tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .career-tag {
+    border: 1px solid #999999;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 12px;
+  }
+
+  /* Show the full URL after links, since a printed page can't be clicked */
+  a[href]::after {
+    content: " (" attr(href) ")";
+    font-size: 11px;
+    color: #555555 !important;
+  }
+
+  /* A print-only footer noting where this came from */
+  .course-detail::after {
+    content: "Printed from Indlela2Tech — indlela2tech.pages.dev";
+    display: block;
+    margin-top: 20px;
+    font-size: 11px;
+    color: #888888 !important;
+    border-top: 1px solid #dddddd;
+    padding-top: 8px;
+  }
+}

@@ -1,0 +1,165 @@
+.browse-layout {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+}
+
+.filters-sidebar {
+  width: 260px;
+  flex-shrink: 0;
+  background: #1a1a1a;
+  color: #ffffff;
+  padding: 1.5rem;
+  border-radius: 10px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.filters-sidebar h2 {
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+  color: #FFEE00;
+}
+
+.filter-group {
+  margin-bottom: 1rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.filter-select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #444444;
+  margin-top: 4px;
+}
+
+.subject-row {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.subject-input-row {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.subject-input-row input {
+  min-width: 0;
+  flex: 1;
+}
+
+.add-subject-btn {
+  background: #FFEE00;
+  color: #111111;
+  border: 2px solid #111111;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-weight: 700;
+  cursor: pointer;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.results-area {
+  flex: 1;
+}
+
+.results-header h2 {
+  margin-bottom: 0.25rem;
+  color: #111111;
+}
+
+.results-count {
+  color: #111111;
+  margin-bottom: 1.5rem;
+}
+
+.results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1.25rem;
+}
+
+.course-card {
+  display: block;
+  background: #fff;
+  border: 2px solid #111111;
+  border-top: 6px solid #FFEE00;
+  border-radius: 10px;
+  padding: 1.25rem;
+  text-decoration: none;
+  color: inherit;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.course-card:hover {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.course-card h3 {
+  margin: 0 0 0.25rem;
+  color: #111111;
+}
+
+.institution-name {
+  color: #111111;
+  margin-bottom: 0.75rem;
+}
+
+.course-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+
+.meta-tag {
+  font-size: 0.75rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: #f1f1f1;
+  color: #111111;
+  border: 1px solid #111111;
+}
+
+.meta-tag.fee-required {
+  background: #fdecea;
+  color: #c0392b;
+  border-color: #c0392b;
+}
+
+.meta-tag.fee-free {
+  background: #eafaf1;
+  color: #1a7a3c;
+  border-color: #1a7a3c;
+}
+
+.description {
+  font-size: 0.9rem;
+  color: #111111;
+}
+
+.no-results {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: #111111;
+  padding: 2rem;
+}
+
+@media (max-width: 800px) {
+  .browse-layout {
+    flex-direction: column;
+  }
+  .filters-sidebar {
+    width: 100%;
+  }
+  .results-grid {
+    grid-template-columns: 1fr;
+  }
+}

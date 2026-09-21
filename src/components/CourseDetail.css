@@ -1,0 +1,75 @@
+.course-detail-status {
+  color: #111111;
+  padding: 24px 20px;
+  font-size: 15px;
+}
+
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.career-tag {
+  display: inline-block;
+  background: #FFEE00;
+  color: #111111;
+  border: 1px solid #111111;
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.req-badge,
+.fee-badge {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.req-strict {
+  background: #fdecea;
+  color: #c0392b;
+  border: 1px solid #c0392b;
+}
+
+.req-flexible {
+  background: #eafaf1;
+  color: #1a7a3c;
+  border: 1px solid #1a7a3c;
+}
+
+.fee-required {
+  background: #fdecea;
+  color: #c0392b;
+  border: 1px solid #c0392b;
+}
+
+.fee-free {
+  background: #eafaf1;
+  color: #1a7a3c;
+  border: 1px solid #1a7a3c;
+}
+
+.apply-now-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #111111;
+  color: #FFEE00;
+  border: 2px solid #111111;
+  border-radius: 12px;
+  padding: 12px 22px;
+  font-weight: 700;
+  font-size: 16px;
+  text-decoration: none;
+  margin-top: 10px;
+}
+
+.apply-now-button:hover {
+  background: #FFEE00;
+  color: #111111;
+}
