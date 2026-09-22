@@ -34,11 +34,12 @@ export default function ManageInstitutions() {
   useEffect(() => { fetchInstitutions(); }, []);
 
   function startEdit(inst) {
+    setMessage('');
     setEditingId(inst.institution_id);
     setForm({
-      name: inst.name,
-      type: inst.type,
-      province: inst.province,
+      name: inst.name || '',
+      type: inst.type || 'university',
+      province: inst.province || PROVINCES[0],
       application_open_month: inst.application_open_month || '',
       application_close_month: inst.application_close_month || '',
       application_portal_link: inst.application_portal_link || '',
@@ -52,6 +53,7 @@ export default function ManageInstitutions() {
     setForm(EMPTY_FORM);
     setCampuses([]);
     setNewCampusName('');
+    setMessage('');
   }
 
   async function handleImageUpload(e) {
@@ -70,21 +72,55 @@ export default function ManageInstitutions() {
     const { data: urlData } = supabase.storage.from('course-images').getPublicUrl(fileName);
     setForm((prev) => ({ ...prev, image_url: urlData.publicUrl }));
     setUploading(false);
-    setMessage('Image uploaded.');
+    setMessage('Image uploaded. Now click "Save Changes" below to attach it to this institution.');
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
     setMessage('');
+
+    const payload = {
+      name: form.name,
+      type: form.type,
+      province: form.province,
+      application_open_month: form.application_open_month || null,
+      application_close_month: form.application_close_month || null,
+      application_portal_link: form.application_portal_link || null,
+      image_url: form.image_url || null,
+    };
+
+    console.log('Saving institution with payload:', payload);
+
     if (editingId) {
-      const { error } = await supabase.from('institution').update(form).eq('institution_id', editingId);
-      if (error) { setMessage('Error: ' + error.message); return; }
-      setMessage('Institution updated.');
+      const { data, error } = await supabase
+        .from('institution')
+        .update(payload)
+        .eq('institution_id', editingId)
+        .select();
+
+      if (error) {
+        setMessage('Error saving: ' + error.message);
+        console.error('Update error:', error);
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        setMessage('Warning: the update ran with no error, but no row was changed. This usually means a permissions (RLS) rule is silently blocking it. Try logging out and back in, then retry.');
+        console.warn('Update returned zero rows for institution_id:', editingId);
+        return;
+      }
+
+      setMessage('Institution updated. Saved image_url: ' + (data[0].image_url || '(none)'));
     } else {
-      const { error } = await supabase.from('institution').insert([form]);
-      if (error) { setMessage('Error: ' + error.message); return; }
-      setMessage('Institution added. You can now edit it below to add campuses.');
+      const { data, error } = await supabase.from('institution').insert([payload]).select();
+      if (error) {
+        setMessage('Error saving: ' + error.message);
+        console.error('Insert error:', error);
+        return;
+      }
+      setMessage('Institution added.');
     }
+
     cancelEdit();
     fetchInstitutions();
   }
@@ -92,7 +128,10 @@ export default function ManageInstitutions() {
   async function handleDelete(id) {
     if (!window.confirm('Delete this institution? This cannot be undone.')) return;
     const { error } = await supabase.from('institution').delete().eq('institution_id', id);
-    if (error) { setMessage('Error: ' + error.message); return; }
+    if (error) {
+      setMessage('Error: ' + error.message);
+      return;
+    }
     setMessage('Institution deleted.');
     fetchInstitutions();
   }
@@ -164,10 +203,13 @@ export default function ManageInstitutions() {
 
         <div>
           <label style={labelStyle}>Institution Image</label>
-          {form.image_url && (
+          {form.image_url ? (
             <div style={{ marginBottom: '10px' }}>
               <img src={form.image_url} alt="Preview" style={{ width: '160px', height: '100px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #d0d0d0' }} />
+              <p style={{ fontSize: '11px', color: '#888888', wordBreak: 'break-all', marginTop: '4px' }}>{form.image_url}</p>
             </div>
+          ) : (
+            <p style={{ fontSize: '13px', color: '#888888', marginBottom: '8px' }}>No image set for this institution yet.</p>
           )}
           <label htmlFor="institution-image-upload" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '8px', border: '2px dashed #d0d0d0', cursor: 'pointer', fontSize: '14px', color: '#111111' }}>
             {uploading ? 'Uploading…' : form.image_url ? <><ImageIcon size={16} strokeWidth={2} /> Replace image</> : <><Upload size={16} strokeWidth={2} /> Upload an image</>}
@@ -217,8 +259,8 @@ export default function ManageInstitutions() {
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '8px' }}>
-                <button onClick={() => startEdit(inst)} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '6px 10px', borderRadius: '6px', border: '1px solid #d0d0d0', background: 'white', color: '#111111', cursor: 'pointer', fontSize: '13px' }}><Pencil size={14} strokeWidth={2} /> Edit</button>
-                <button onClick={() => handleDelete(inst.institution_id)} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '6px 10px', borderRadius: '6px', border: '1px solid #a33', background: 'white', color: '#a33', cursor: 'pointer', fontSize: '13px' }}><Trash2 size={14} strokeWidth={2} /> Delete</button>
+                <button type="button" onClick={() => startEdit(inst)} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '6px 10px', borderRadius: '6px', border: '1px solid #d0d0d0', background: 'white', color: '#111111', cursor: 'pointer', fontSize: '13px' }}><Pencil size={14} strokeWidth={2} /> Edit</button>
+                <button type="button" onClick={() => handleDelete(inst.institution_id)} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '6px 10px', borderRadius: '6px', border: '1px solid #a33', background: 'white', color: '#a33', cursor: 'pointer', fontSize: '13px' }}><Trash2 size={14} strokeWidth={2} /> Delete</button>
               </div>
             </div>
           ))}
