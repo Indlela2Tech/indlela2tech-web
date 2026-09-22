@@ -16,9 +16,10 @@ export default function ManageInstitutions() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [editingId, setEditingId] = useState(null);
   const [message, setMessage] = useState('');
-  const [campuses, setCampuses] = useState([]);
+  const [pendingCampuses, setPendingCampuses] = useState([]);
   const [newCampusName, setNewCampusName] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   async function fetchInstitutions() {
     setLoading(true);
@@ -45,15 +46,32 @@ export default function ManageInstitutions() {
       application_portal_link: inst.application_portal_link || '',
       image_url: inst.image_url || '',
     });
-    setCampuses(inst.campus || []);
+    const existingCampuses = (inst.campus || []).map((c) => ({ name: c.name }));
+    setPendingCampuses(existingCampuses);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function cancelEdit() {
     setEditingId(null);
     setForm(EMPTY_FORM);
-    setCampuses([]);
+    setPendingCampuses([]);
     setNewCampusName('');
     setMessage('');
+  }
+
+  function addPendingCampus() {
+    const name = newCampusName.trim();
+    if (!name) return;
+    if (pendingCampuses.some((c) => c.name.toLowerCase() === name.toLowerCase())) {
+      setMessage('That campus is already in the list below.');
+      return;
+    }
+    setPendingCampuses((prev) => [...prev, { name }]);
+    setNewCampusName('');
+  }
+
+  function removePendingCampus(index) {
+    setPendingCampuses((prev) => prev.filter((_, i) => i !== index));
   }
 
   async function handleImageUpload(e) {
@@ -72,12 +90,13 @@ export default function ManageInstitutions() {
     const { data: urlData } = supabase.storage.from('course-images').getPublicUrl(fileName);
     setForm((prev) => ({ ...prev, image_url: urlData.publicUrl }));
     setUploading(false);
-    setMessage('Image uploaded. Now click "Save Changes" below to attach it to this institution.');
+    setMessage('Image uploaded.');
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
     setMessage('');
+    setSaving(true);
 
     const payload = {
       name: form.name,
@@ -89,38 +108,51 @@ export default function ManageInstitutions() {
       image_url: form.image_url || null,
     };
 
-    console.log('Saving institution with payload:', payload);
+    let institutionId = editingId;
 
     if (editingId) {
-      const { data, error } = await supabase
-        .from('institution')
-        .update(payload)
-        .eq('institution_id', editingId)
-        .select();
-
+      const { data, error } = await supabase.from('institution').update(payload).eq('institution_id', editingId).select();
       if (error) {
-        setMessage('Error saving: ' + error.message);
-        console.error('Update error:', error);
+        setMessage('Error saving institution: ' + error.message);
+        setSaving(false);
         return;
       }
-
       if (!data || data.length === 0) {
-        setMessage('Warning: the update ran with no error, but no row was changed. This usually means a permissions (RLS) rule is silently blocking it. Try logging out and back in, then retry.');
-        console.warn('Update returned zero rows for institution_id:', editingId);
+        setMessage('Warning: update ran with no error, but no row changed. Try logging out and back in.');
+        setSaving(false);
         return;
       }
-
-      setMessage('Institution updated. Saved image_url: ' + (data[0].image_url || '(none)'));
     } else {
-      const { data, error } = await supabase.from('institution').insert([payload]).select();
+      const { data, error } = await supabase.from('institution').insert([payload]).select('institution_id').single();
       if (error) {
-        setMessage('Error saving: ' + error.message);
-        console.error('Insert error:', error);
+        setMessage('Error saving institution: ' + error.message);
+        setSaving(false);
         return;
       }
-      setMessage('Institution added.');
+      institutionId = data.institution_id;
     }
 
+    const { error: deleteErr } = await supabase.from('campus').delete().eq('institution_id', institutionId);
+    if (deleteErr) {
+      setMessage('Institution saved, but there was an error updating campuses: ' + deleteErr.message);
+      setSaving(false);
+      fetchInstitutions();
+      return;
+    }
+
+    if (pendingCampuses.length > 0) {
+      const rows = pendingCampuses.map((c) => ({ institution_id: institutionId, name: c.name }));
+      const { error: insertErr } = await supabase.from('campus').insert(rows);
+      if (insertErr) {
+        setMessage('Institution saved, but there was an error saving campuses: ' + insertErr.message);
+        setSaving(false);
+        fetchInstitutions();
+        return;
+      }
+    }
+
+    setMessage(editingId ? 'Institution updated.' : 'Institution added.');
+    setSaving(false);
     cancelEdit();
     fetchInstitutions();
   }
@@ -133,23 +165,6 @@ export default function ManageInstitutions() {
       return;
     }
     setMessage('Institution deleted.');
-    fetchInstitutions();
-  }
-
-  async function addCampus() {
-    if (!newCampusName || !editingId) return;
-    const { error } = await supabase.from('campus').insert([{ institution_id: editingId, name: newCampusName }]);
-    if (error) { setMessage('Error: ' + error.message); return; }
-    setNewCampusName('');
-    const { data } = await supabase.from('campus').select('*').eq('institution_id', editingId);
-    setCampuses(data || []);
-    fetchInstitutions();
-  }
-
-  async function removeCampus(campusId) {
-    const { error } = await supabase.from('campus').delete().eq('campus_id', campusId);
-    if (error) { setMessage('Error: ' + error.message); return; }
-    setCampuses((prev) => prev.filter((c) => c.campus_id !== campusId));
     fetchInstitutions();
   }
 
@@ -206,10 +221,9 @@ export default function ManageInstitutions() {
           {form.image_url ? (
             <div style={{ marginBottom: '10px' }}>
               <img src={form.image_url} alt="Preview" style={{ width: '160px', height: '100px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #d0d0d0' }} />
-              <p style={{ fontSize: '11px', color: '#888888', wordBreak: 'break-all', marginTop: '4px' }}>{form.image_url}</p>
             </div>
           ) : (
-            <p style={{ fontSize: '13px', color: '#888888', marginBottom: '8px' }}>No image set for this institution yet.</p>
+            <p style={{ fontSize: '13px', color: '#888888', marginBottom: '8px' }}>No image set yet.</p>
           )}
           <label htmlFor="institution-image-upload" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 16px', borderRadius: '8px', border: '2px dashed #d0d0d0', cursor: 'pointer', fontSize: '14px', color: '#111111' }}>
             {uploading ? 'Uploading…' : form.image_url ? <><ImageIcon size={16} strokeWidth={2} /> Replace image</> : <><Upload size={16} strokeWidth={2} /> Upload an image</>}
@@ -217,25 +231,40 @@ export default function ManageInstitutions() {
           <input id="institution-image-upload" type="file" accept="image/jpeg,image/png,image/webp" onChange={handleImageUpload} style={{ display: 'none' }} />
         </div>
 
-        {editingId && (
-          <div style={{ border: '1px solid #e5e5e5', borderRadius: '10px', padding: '14px' }}>
-            <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px', color: '#111111' }}><MapPin size={16} strokeWidth={2} /> Campuses</h4>
-            {campuses.map((c) => (
-              <div key={c.campus_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', fontSize: '14px', color: '#111111' }}>
-                <span>{c.name}</span>
-                <button type="button" onClick={() => removeCampus(c.campus_id)} style={{ background: 'none', border: 'none', color: '#a33', cursor: 'pointer' }}><X size={14} strokeWidth={2} /></button>
-              </div>
-            ))}
-            <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
-              <input type="text" placeholder="Campus name" value={newCampusName} onChange={(e) => setNewCampusName(e.target.value)} style={{ ...inputStyle, flex: 1 }} />
-              <button type="button" onClick={addCampus} className="btn-primary" style={{ padding: '8px 14px' }}><Plus size={16} strokeWidth={2} /></button>
+        <div style={{ border: '2px solid #FFEE00', borderRadius: '10px', padding: '14px', background: '#FFFBEB' }}>
+          <h4 style={{ margin: '0 0 6px 0', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px', color: '#111111' }}><MapPin size={16} strokeWidth={2} /> Campuses</h4>
+          <p style={{ fontSize: '12px', color: '#555555', margin: '0 0 10px 0' }}>
+            Add every campus this institution has, before saving below.
+          </p>
+
+          {pendingCampuses.length === 0 && (
+            <p style={{ fontSize: '13px', color: '#888888', margin: '0 0 8px 0' }}>No campuses added yet.</p>
+          )}
+
+          {pendingCampuses.map((c, index) => (
+            <div key={index} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', fontSize: '14px', color: '#111111' }}>
+              <span>{c.name}</span>
+              <button type="button" onClick={() => removePendingCampus(index)} style={{ background: 'none', border: 'none', color: '#a33', cursor: 'pointer' }}><X size={14} strokeWidth={2} /></button>
             </div>
+          ))}
+
+          <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+            <input
+              type="text"
+              placeholder="Campus name"
+              value={newCampusName}
+              onChange={(e) => setNewCampusName(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addPendingCampus(); } }}
+              style={{ ...inputStyle, flex: 1 }}
+            />
+            <button type="button" onClick={addPendingCampus} className="btn-primary" style={{ padding: '8px 14px' }}><Plus size={16} strokeWidth={2} /></button>
           </div>
-        )}
+        </div>
 
         <div style={{ display: 'flex', gap: '10px' }}>
-          <button type="submit" className="btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-            {editingId ? <Check size={16} strokeWidth={2} /> : <Plus size={16} strokeWidth={2} />} {editingId ? 'Save Changes' : 'Add Institution'}
+          <button type="submit" disabled={saving} className="btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            {editingId ? <Check size={16} strokeWidth={2} /> : <Plus size={16} strokeWidth={2} />}
+            {saving ? 'Saving...' : editingId ? 'Save Changes' : 'Add Institution'}
           </button>
           {editingId && <button type="button" onClick={cancelEdit} className="back-button" style={{ margin: 0, display: 'inline-flex', alignItems: 'center', gap: '6px' }}><X size={16} strokeWidth={2} /> Cancel</button>}
         </div>
