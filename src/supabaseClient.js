@@ -8,7 +8,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 export async function getCourseById(courseId) {
   const { data, error } = await supabase
     .from('course')
-    .select('*, institution(name, province, type, image_url, application_open_month, application_close_month, application_portal_link, campus(*)), subject_requirement(subject_name, minimum_percentage)')
+    .select('*, institution(name, province, type, image_url, application_open_month, application_close_month, application_portal_link, campus(*)), subject_requirement(subject_name, minimum_percentage), course_mode_duration(mode, duration)')
     .eq('course_id', courseId)
     .single();
 
@@ -55,7 +55,7 @@ export async function getInstitutionWithCourses(institutionId) {
 
   const { data: courses, error: courseError } = await supabase
     .from('course')
-    .select('course_id, name, qualification_type, nqf_level, mode, has_application_fee')
+    .select('course_id, name, qualification_type, nqf_level, has_application_fee')
     .eq('institution_id', institutionId)
     .order('name');
 

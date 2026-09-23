@@ -9,6 +9,8 @@ import { SlidersHorizontal, Search, Building2, GraduationCap, Layers, Clock, Wal
 
 const FEE_LABELS = { true: 'Application Fee Required', false: 'No Application Fee' };
 const MATHS_VARIANTS = ['Mathematics', 'Mathematical Literacy', 'Technical Mathematics'];
+const MODE_LABELS = { 'full-time': 'Full-time', 'part-time': 'Part-time', 'distance': 'Distance' };
+const MODE_OPTIONS = ['Full-time', 'Part-time', 'Distance'];
 
 function BrowsePage() {
   const [courses, setCourses] = useState([]);
@@ -21,7 +23,6 @@ function BrowsePage() {
   const [selectedQualificationType, setSelectedQualificationType] = useState('');
   const [nqfLevels, setNqfLevels] = useState([]);
   const [selectedNqfLevel, setSelectedNqfLevel] = useState('');
-  const [modes, setModes] = useState([]);
   const [selectedMode, setSelectedMode] = useState('');
   const [feeOptions, setFeeOptions] = useState([]);
   const [selectedFee, setSelectedFee] = useState('');
@@ -33,7 +34,7 @@ function BrowsePage() {
     async function fetchCourses() {
       const { data, error } = await supabase
         .from('course')
-        .select('*, institution(name, province, type, campus(*)), subject_requirement(subject_name, minimum_percentage)');
+        .select('*, institution(name, province, type, campus(*)), subject_requirement(subject_name, minimum_percentage), course_mode_duration(mode, duration)');
 
       if (error) {
         console.error('Error fetching courses:', error);
@@ -47,7 +48,6 @@ function BrowsePage() {
       setProvinces([...new Set(data.map((c) => c.institution?.province).filter(Boolean))].sort());
       setInstitutions([...new Set(data.map((c) => c.institution?.name).filter(Boolean))].sort());
       setQualificationTypes([...new Set(data.map((c) => c.qualification_type).filter(Boolean))].sort());
-      setModes([...new Set(data.map((c) => c.mode).filter(Boolean))].sort());
 
       const uniqueLevels = [...new Set(data.map((c) => c.nqf_level))].filter((level) => level !== null).sort((a, b) => a - b).map((level) => String(level));
       setNqfLevels(uniqueLevels);
@@ -64,8 +64,13 @@ function BrowsePage() {
       if (selectedInstitution && course.institution?.name !== selectedInstitution) return false;
       if (selectedQualificationType && course.qualification_type !== selectedQualificationType) return false;
       if (selectedNqfLevel && String(course.nqf_level) !== selectedNqfLevel) return false;
-      if (selectedMode && course.mode !== selectedMode) return false;
       if (selectedFee && FEE_LABELS[String(course.has_application_fee)] !== selectedFee) return false;
+
+      if (selectedMode) {
+        const modeDurations = course.course_mode_duration || [];
+        const hasMode = modeDurations.some((m) => MODE_LABELS[m.mode] === selectedMode);
+        if (!hasMode) return false;
+      }
 
       if (apsScore && course.minimum_aps !== null) {
         if (Number(apsScore) < course.minimum_aps) return false;
@@ -113,7 +118,8 @@ function BrowsePage() {
     });
   }, [filteredCourses, directMatches, query]);
 
-  function CourseCard({ course }) {
+  function CourseResultCard({ course }) {
+    const modes = (course.course_mode_duration || []).map((m) => MODE_LABELS[m.mode] || m.mode).join(' / ');
     return (
       <Link to={'/course/' + course.course_id} className="course-card">
         <h3>{course.name}</h3>
@@ -121,7 +127,7 @@ function BrowsePage() {
         <div className="course-meta">
           <span className="meta-tag" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><GraduationCap size={14} strokeWidth={2} /> {course.qualification_type}</span>
           {course.nqf_level && <span className="meta-tag" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Layers size={14} strokeWidth={2} /> NQF {course.nqf_level}</span>}
-          <span className="meta-tag" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Clock size={14} strokeWidth={2} /> {course.mode}</span>
+          {modes && <span className="meta-tag" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Clock size={14} strokeWidth={2} /> {modes}</span>}
           <span className={'meta-tag ' + (course.has_application_fee ? 'fee-required' : 'fee-free')} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Wallet size={14} strokeWidth={2} /> {course.has_application_fee ? 'Fee required' : 'No fee'}</span>
         </div>
         {course.description && <p className="description">{course.description}</p>}
@@ -138,7 +144,7 @@ function BrowsePage() {
         <FilterSelect label="Institution" value={selectedInstitution} onChange={setSelectedInstitution} options={institutions} icon={Building2} />
         <FilterSelect label="Qualification Type" value={selectedQualificationType} onChange={setSelectedQualificationType} options={qualificationTypes} icon={GraduationCap} />
         <FilterSelect label="NQF Level" value={selectedNqfLevel} onChange={setSelectedNqfLevel} options={nqfLevels} icon={LayoutGrid} />
-        <FilterSelect label="Mode of Study" value={selectedMode} onChange={setSelectedMode} options={modes} icon={Clock} />
+        <FilterSelect label="Mode of Study" value={selectedMode} onChange={setSelectedMode} options={MODE_OPTIONS} icon={Clock} />
         <FilterSelect label="Application Fee" value={selectedFee} onChange={setSelectedFee} options={feeOptions} icon={Wallet} />
 
         <ApsInput value={apsScore} onChange={setApsScore} />
@@ -168,7 +174,7 @@ function BrowsePage() {
         {!query && (
           <div className="results-grid">
             {!loading && filteredCourses.length === 0 && <p className="no-results">No courses match your filters yet. Try adjusting them.</p>}
-            {filteredCourses.map((course) => <CourseCard key={course.course_id} course={course} />)}
+            {filteredCourses.map((course) => <CourseResultCard key={course.course_id} course={course} />)}
           </div>
         )}
 
@@ -177,7 +183,7 @@ function BrowsePage() {
             <h3 style={{ color: '#111111', marginBottom: '10px' }}>Direct Matches ({directMatches.length})</h3>
             {directMatches.length > 0 ? (
               <div className="results-grid" style={{ marginBottom: '28px' }}>
-                {directMatches.map((course) => <CourseCard key={course.course_id} course={course} />)}
+                {directMatches.map((course) => <CourseResultCard key={course.course_id} course={course} />)}
               </div>
             ) : (
               <p style={{ color: '#555555', marginBottom: '28px' }}>No course names match "{searchTerm}" directly.</p>
@@ -186,7 +192,7 @@ function BrowsePage() {
             <h3 style={{ color: '#111111', marginBottom: '10px' }}>You Might Also Like ({relatedMatches.length})</h3>
             {relatedMatches.length > 0 ? (
               <div className="results-grid">
-                {relatedMatches.map((course) => <CourseCard key={course.course_id} course={course} />)}
+                {relatedMatches.map((course) => <CourseResultCard key={course.course_id} course={course} />)}
               </div>
             ) : (
               <p style={{ color: '#555555' }}>No related results found.</p>

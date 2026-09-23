@@ -72,7 +72,7 @@ export default function InstitutionDetail() {
             <Link key={course.course_id} to={'/course/' + course.course_id} style={courseCardStyle}>
               <strong style={{ fontSize: '16px' }}>{course.name}</strong>
               <div style={{ fontSize: '13px', color: '#555555', marginTop: '4px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span>{course.qualification_type}{course.nqf_level ? ' · NQF ' + course.nqf_level : ''} · {course.mode}</span>
+                <span>{course.qualification_type}{course.nqf_level ? ' · NQF ' + course.nqf_level : ''}</span>
                 <ArrowRight size={16} strokeWidth={2} />
               </div>
             </Link>

@@ -5,11 +5,18 @@ import BackButton from './BackButton';
 import { Scale } from 'lucide-react';
 
 const MATHS_VARIANTS = ['Mathematics', 'Mathematical Literacy', 'Technical Mathematics'];
+const MODE_LABELS = { 'full-time': 'Full-time', 'part-time': 'Part-time', 'distance': 'Distance' };
 
 function mathsText(course) {
   const reqs = (course.subject_requirement || []).filter((r) => MATHS_VARIANTS.includes(r.subject_name));
   if (reqs.length === 0) return 'Not specified';
   return reqs.map((r) => r.subject_name + ': ' + r.minimum_percentage + '%').join(', ');
+}
+
+function modeDurationText(course) {
+  const list = course.course_mode_duration || [];
+  if (list.length === 0) return 'Not specified';
+  return list.map((m) => (MODE_LABELS[m.mode] || m.mode) + ': ' + m.duration).join(', ');
 }
 
 function Row({ label, a, b }) {
@@ -59,8 +66,7 @@ export default function ComparePage() {
         <Row label="Institution" a={courseA.institution ? courseA.institution.name : ''} b={courseB.institution ? courseB.institution.name : ''} />
         <Row label="Qualification" a={courseA.qualification_type} b={courseB.qualification_type} />
         <Row label="NQF Level" a={courseA.nqf_level || 'Not specified'} b={courseB.nqf_level || 'Not specified'} />
-        <Row label="Duration" a={courseA.duration} b={courseB.duration} />
-        <Row label="Mode" a={courseA.mode} b={courseB.mode} />
+        <Row label="Mode & Duration" a={modeDurationText(courseA)} b={modeDurationText(courseB)} />
         <Row label="Minimum APS" a={courseA.minimum_aps || 'Not specified'} b={courseB.minimum_aps || 'Not specified'} />
         <Row label="Mathematics" a={mathsText(courseA)} b={mathsText(courseB)} />
         <Row
