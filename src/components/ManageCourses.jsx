@@ -9,7 +9,7 @@ const EMPTY_FORM = {
   name: '',
   qualification_type: QUALIFICATION_TYPES[0],
   nqf_level: '',
-  requirement_type: 'aps-only',
+  requirement_type: 'APS-only',
   minimum_aps: '',
   has_application_fee: false,
   application_fee_amount: '',
@@ -61,7 +61,7 @@ export default function ManageCourses() {
       name: course.name || '',
       qualification_type: course.qualification_type || QUALIFICATION_TYPES[0],
       nqf_level: course.nqf_level ?? '',
-      requirement_type: course.requirement_type || 'aps-only',
+      requirement_type: course.requirement_type || 'APS-only',
       minimum_aps: course.minimum_aps ?? '',
       has_application_fee: !!course.has_application_fee,
       application_fee_amount: course.application_fee_amount ?? '',
@@ -232,8 +232,8 @@ export default function ManageCourses() {
           <div style={{ flex: 1, minWidth: '200px' }}>
             <label style={labelStyle}>Requirement Type</label>
             <select value={form.requirement_type} onChange={(e) => setForm({ ...form, requirement_type: e.target.value })} style={inputStyle}>
-              <option value="aps-only">APS only</option>
-              <option value="subject-based">APS + specific subjects</option>
+              <option value="APS-only">APS only</option>
+              <option value="APS and subject-based">APS + specific subjects</option>
             </select>
           </div>
           <div style={{ flex: 1, minWidth: '140px' }}>
@@ -261,7 +261,7 @@ export default function ManageCourses() {
         <div style={{ border: '2px solid #FFEE00', borderRadius: '10px', padding: '14px', background: '#FFFBEB' }}>
           <h4 style={{ margin: '0 0 6px 0', fontSize: '14px', color: '#111111' }}>Mode of Study & Duration</h4>
           <p style={{ fontSize: '12px', color: '#555555', margin: '0 0 10px 0' }}>
-            Add every mode this course is offered in, with that mode's own duration (e.g. Full-time: 3 years, Part-time: 4 years).
+            Add every mode this course is offered in, with that mode's own duration.
           </p>
 
           {pendingModeDurations.length === 0 && (

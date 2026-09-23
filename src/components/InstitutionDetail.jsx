@@ -6,10 +6,11 @@ import PrintButton from './PrintButton';
 import '../Print.css';
 import { Building2, MapPin, ExternalLink, GraduationCap, ArrowRight } from 'lucide-react';
 
-const cardStyle = { border: '2px solid #111111', borderTop: '6px solid #FFEE00', borderRadius: '14px', padding: '24px', maxWidth: '760px', margin: '0 auto' };
-const titleStyle = { display: 'flex', alignItems: 'center', gap: '8px', color: '#111111', fontSize: '22px', lineHeight: 1.3, margin: '0 0 8px 0' };
-const subtitleStyle = { fontWeight: 600, color: '#111111', marginBottom: '16px', fontSize: '14px' };
-const courseCardStyle = { border: '2px solid #111111', borderRadius: '12px', padding: '16px', display: 'block', textDecoration: 'none', color: '#111111', marginBottom: '12px' };
+const cardStyle = { border: '2px solid #111111', borderTop: '6px solid #FFEE00', borderRadius: '14px', padding: '24px', maxWidth: '760px', margin: '0 auto', textAlign: 'left' };
+const titleStyle = { display: 'flex', alignItems: 'center', gap: '8px', color: '#111111', fontSize: '22px', lineHeight: 1.3, margin: '0 0 8px 0', textAlign: 'left' };
+const subtitleStyle = { fontWeight: 600, color: '#111111', marginBottom: '16px', fontSize: '14px', textAlign: 'left' };
+const listStyle = { margin: 0, color: '#111111', textAlign: 'left', paddingLeft: '20px' };
+const courseCardStyle = { border: '2px solid #111111', borderRadius: '12px', padding: '16px', display: 'block', textDecoration: 'none', color: '#111111', marginBottom: '12px', textAlign: 'left' };
 
 export default function InstitutionDetail() {
   const { id } = useParams();
@@ -26,11 +27,11 @@ export default function InstitutionDetail() {
     load();
   }, [id]);
 
-  if (loading) return <p style={{ padding: '20px', color: '#111111' }}>Loading institution…</p>;
-  if (!institution) return <p style={{ padding: '20px', color: '#111111' }}>Institution not found.</p>;
+  if (loading) return <p style={{ padding: '20px', color: '#111111', textAlign: 'left' }}>Loading institution…</p>;
+  if (!institution) return <p style={{ padding: '20px', color: '#111111', textAlign: 'left' }}>Institution not found.</p>;
 
   return (
-    <div style={{ padding: '10px' }}>
+    <div style={{ padding: '10px', textAlign: 'left' }}>
       <div className="no-print" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '10px' }}>
         <BackButton />
         <PrintButton />
@@ -44,15 +45,15 @@ export default function InstitutionDetail() {
 
         {institution.campus && institution.campus.length > 0 && (
           <div style={{ marginBottom: '16px' }}>
-            <p style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600, color: '#111111', margin: '0 0 6px 0' }}><MapPin size={16} strokeWidth={2} /> Campuses</p>
-            <ul style={{ margin: 0, color: '#111111' }}>
+            <p style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 600, color: '#111111', margin: '0 0 6px 0', textAlign: 'left' }}><MapPin size={16} strokeWidth={2} /> Campuses</p>
+            <ul style={listStyle}>
               {institution.campus.map((c) => <li key={c.campus_id}>{c.name}</li>)}
             </ul>
           </div>
         )}
 
         {(institution.application_open_month || institution.application_close_month) && (
-          <p style={{ color: '#111111', marginBottom: '16px' }}>
+          <p style={{ color: '#111111', marginBottom: '16px', textAlign: 'left' }}>
             <strong>Applications:</strong> Opens {institution.application_open_month || 'not set'} &middot; Closes {institution.application_close_month || 'not set'}
           </p>
         )}
@@ -64,8 +65,8 @@ export default function InstitutionDetail() {
         )}
       </div>
 
-      <div style={{ maxWidth: '760px', margin: '30px auto 0' }}>
-        <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#111111', marginBottom: '14px' }}><GraduationCap size={22} strokeWidth={2} /> Courses at this Institution</h2>
+      <div style={{ maxWidth: '760px', margin: '30px auto 0', textAlign: 'left' }}>
+        <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#111111', marginBottom: '14px', textAlign: 'left' }}><GraduationCap size={22} strokeWidth={2} /> Courses at this Institution</h2>
 
         {institution.courses && institution.courses.length > 0 ? (
           institution.courses.map((course) => (
@@ -78,7 +79,7 @@ export default function InstitutionDetail() {
             </Link>
           ))
         ) : (
-          <p style={{ color: '#111111' }}>No courses listed for this institution yet.</p>
+          <p style={{ color: '#111111', textAlign: 'left' }}>No courses listed for this institution yet.</p>
         )}
       </div>
     </div>
