@@ -19,11 +19,15 @@ export default function InstitutionsPage() {
 
   useEffect(() => {
     async function fetchInstitutions() {
-      const { data, error } = await supabase.from('institution').select('*, campus(*)').order('name');
+      const { data, error } = await supabase
+        .from('institution')
+        .select('*, campus(*), course(course_id)')
+        .order('name');
       if (error) {
         console.error('Error fetching institutions:', error);
       } else {
-        setInstitutions(data || []);
+        const withCourses = (data || []).filter((inst) => inst.course && inst.course.length > 0);
+        setInstitutions(withCourses);
       }
       setLoading(false);
     }
